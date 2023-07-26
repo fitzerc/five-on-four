@@ -1,9 +1,12 @@
 package main
 
 import (
-	"gorm.io/gorm"
-	"gorm.io/driver/sqlite"
+	"net/http"
+
 	"github.com/fitzerc/five-on-four/data"
+	"github.com/labstack/echo/v4"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -13,5 +16,11 @@ func main() {
 		panic("failed to connect to database")
 	}
 
-	db.AutoMigrate(&data.User{}, &data.UserRole{}, &data.ReadReceipt{})
+	data.InitDb(db)
+
+	e := echo.New()
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, World!")
+	})
+	e.Logger.Fatal(e.Start(":1323"))
 }
