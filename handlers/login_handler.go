@@ -1,21 +1,22 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/fitzerc/five-on-four/data"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-type jwtCustomClaims struct {
+type JwtCustomClaims struct {
 	Email string `json:"email"`
 	ID    uint   `json:"id"`
-	jwt.RegisteredClaims
+    jwt.StandardClaims
 }
 
 type loginRequest struct {
@@ -48,11 +49,11 @@ func GetApiTokenHandler(c echo.Context, db *gorm.DB) (err error) {
 		})
 	}
 
-	claims := &jwtCustomClaims{
+	claims := &JwtCustomClaims{
 		user.Email,
 		user.ID,
-		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
+        jwt.StandardClaims{
+            ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 		},
 	}
 
@@ -67,4 +68,13 @@ func GetApiTokenHandler(c echo.Context, db *gorm.DB) (err error) {
 	return c.JSON(http.StatusOK, echo.Map{
 		"token": t,
 	})
+}
+
+func JWTErrorChecker(err error, c echo.Context) error {
+    // Redirects to the signIn form.
+    fmt.Println("Error:")
+    fmt.Printf("%+v", err)
+    fmt.Println("Context:")
+    fmt.Printf("%+v", c)
+	return c.Redirect(http.StatusMovedPermanently, c.Echo().Reverse("userSignInForm"))
 }

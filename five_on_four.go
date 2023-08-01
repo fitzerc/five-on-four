@@ -7,8 +7,10 @@ import (
 
 	"github.com/fitzerc/five-on-four/data"
 	"github.com/fitzerc/five-on-four/handlers"
+	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -29,7 +31,18 @@ func main() {
 	data.InitDb(db)
 
 	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
+
+    //map endpoints
+    apiGroup := e.Group("/api")
+
+    apiGroup.Use(middleware.JWTWithConfig(middleware.JWTConfig{
+        Claims: &jwt.StandardClaims{},
+        SigningKey: []byte(os.Getenv("SECRET_KEY")),
+        TokenLookup: "header:Authorization",
+        ErrorHandlerWithContext: handlers.JWTErrorChecker,
+    }))
+
+	apiGroup.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 
