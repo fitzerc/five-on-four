@@ -6,10 +6,10 @@ import (
 
 type User struct {
 	gorm.Model
-	Email     string `json: "email"`
-	Password  string `json: "password"`
-	FirstName string `json: "first_name"`
-	LastName  string `json: "last_name"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 type UserRole struct {
@@ -26,6 +26,6 @@ type ReadReceipt struct {
 }
 
 type ErrorResponse struct {
-	ErrorCode        string `json: "error_code"`
-	ErrorDescription string `json: "error_description"`
+	ErrorCode        string `json:"error_code"`
+	ErrorDescription string `json:"error_description"`
 }

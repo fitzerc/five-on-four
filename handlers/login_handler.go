@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -20,18 +21,22 @@ type JwtCustomClaims struct {
 }
 
 type loginRequest struct {
-	Email    string `json: "email"`
-	Password string `json: "password"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
-func GetApiTokenHandler(c echo.Context, db *gorm.DB) (err error) {
+type TokenHandler struct {
+    Db gorm.DB
+}
+
+func (tokenHandler TokenHandler) GetApiToken(c echo.Context) (err error) {
 	loginReq := new(loginRequest)
 	if err = c.Bind(loginReq); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	var user data.User
-	db.Where("email = ?", loginReq.Email).First(&user)
+	tokenHandler.Db.Where("email = ?", loginReq.Email).First(&user)
 
 	if user.ID == 0 {
 		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
@@ -68,6 +73,27 @@ func GetApiTokenHandler(c echo.Context, db *gorm.DB) (err error) {
 	return c.JSON(http.StatusOK, echo.Map{
 		"token": t,
 	})
+}
+
+func GetCustomClaims(c echo.Context) (JwtCustomClaims, error) {
+    tokenString := c.Get("user").(*jwt.Token).Raw
+
+    token, err := jwt.ParseWithClaims(tokenString, &JwtCustomClaims{},
+        func(token *jwt.Token) (interface{}, error) {
+	        return []byte(os.Getenv("SECRET_KEY")), nil
+        })
+
+    if err != nil {
+        return JwtCustomClaims{}, err
+    }
+
+    claims, ok := token.Claims.(*JwtCustomClaims)
+
+    if ok {
+        return *claims, nil
+    }
+
+    return *claims, errors.New("unable to get claims from token")
 }
 
 func JWTErrorChecker(err error, c echo.Context) error {

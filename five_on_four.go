@@ -11,8 +11,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -22,15 +20,12 @@ func main() {
 	}
 
 	dbName := os.Getenv("DB_NAME")
-	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
-
-	if err != nil {
-		panic("failed to connect to database")
-	}
-
-	data.InitDb(db)
+    db := data.InitDb(dbName);
 
 	e := echo.New()
+
+    userHandler := &handlers.UserHandler{Db: db}
+    tokenHandler := &handlers.TokenHandler{Db: db}
 
     //map endpoints
     apiGroup := e.Group("/api")
@@ -46,12 +41,10 @@ func main() {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 
-	e.POST("/users", func(c echo.Context) error {
-		return handlers.AddUserHandler(c, db)
-	})
-	e.POST("/apitoken", func(c echo.Context) error {
-		return handlers.GetApiTokenHandler(c, db)
-	})
+	e.POST("/users", userHandler.AddUser)
+	e.POST("/apitoken", tokenHandler.GetApiToken)
+
+    apiGroup.GET("/users", userHandler.GetUserByHeaderAuth)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

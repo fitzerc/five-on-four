@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/fitzerc/five-on-four/data"
@@ -9,15 +10,42 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddUserHandler(c echo.Context, db *gorm.DB) (err error) {
+type UserHandler struct {
+    Db gorm.DB
+}
 
+func (userHandler UserHandler) GetUserByHeaderAuth(c echo.Context) (err error) {
+    claims, err := GetCustomClaims(c)
+
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+            ErrorCode: "invalid_token",
+            ErrorDescription: err.Error(),
+        })
+    }
+
+	var existingUser data.User
+	userHandler.Db.Where("id = ?", claims.ID).First(&existingUser)
+
+    if existingUser.ID == 0 {
+        return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+            ErrorCode: "invalid_request",
+            ErrorDescription: "invalid token",
+        })
+    }
+
+    return c.JSON(http.StatusOK, existingUser)
+}
+
+func (userHandler UserHandler) AddUser(c echo.Context) (err error) {
 	newUser := new(data.User)
 	if err = c.Bind(newUser); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+    fmt.Printf("%+v\n", newUser)
 
 	var existingUser data.User
-	db.Where("email = ?", newUser.Email).First(&existingUser)
+	userHandler.Db.Where("email = ?", newUser.Email).First(&existingUser)
 
 	if existingUser.ID > 0 {
 		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
@@ -35,8 +63,9 @@ func AddUserHandler(c echo.Context, db *gorm.DB) (err error) {
 		})
 	}
 
+    fmt.Printf("%+v\n", newUser)
 	newUser.Password = string(hashedPassword)
-	db.Save(&newUser)
+	userHandler.Db.Save(&newUser)
 
 	return c.String(http.StatusOK, "success")
 }
