@@ -26,6 +26,12 @@ func main() {
 
     userHandler := &handlers.UserHandler{Db: db}
     tokenHandler := &handlers.TokenHandler{Db: db}
+    userRolesHandler := &handlers.UserRolesHandler{Db: db}
+
+    //Unprotected.
+    //TODO: move AddUser to protected at some point
+	e.POST("/users", userHandler.AddUser)
+	e.POST("/apitoken", tokenHandler.GetApiToken)
 
     //map endpoints
     apiGroup := e.Group("/api")
@@ -38,13 +44,13 @@ func main() {
     }))
 
 	apiGroup.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
+		return c.String(http.StatusOK, "ok")
 	})
 
-	e.POST("/users", userHandler.AddUser)
-	e.POST("/apitoken", tokenHandler.GetApiToken)
-
-    apiGroup.GET("/users", userHandler.GetUserByHeaderAuth)
+    apiGroup.GET("/users", userHandler.GetLoggedInUser)
+    apiGroup.POST("/users/roles", userRolesHandler.AddUserRole)
+    apiGroup.GET("/users/:id/roles", userRolesHandler.GetRolesByUserId)
+    apiGroup.DELETE("/users/:id/roles/:roleId", userRolesHandler.RemoveRoleFromUser)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

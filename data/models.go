@@ -14,14 +14,14 @@ type User struct {
 
 type UserRole struct {
 	gorm.Model
-	UserID          uint
-	Role            string
-	RoleDescription string
+    UserId          uint   `json:"user_id"`
+    Role            string `json:"role"`
+    RoleDescription string `json:"role_description"`
 }
 
 type ReadReceipt struct {
 	gorm.Model
-	UserID  uint
+    UserId  uint `json:"user_id"`
 	HasRead bool `gorm:"default:false"`
 }
 

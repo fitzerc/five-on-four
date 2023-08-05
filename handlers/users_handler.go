@@ -14,7 +14,7 @@ type UserHandler struct {
     Db gorm.DB
 }
 
-func (userHandler UserHandler) GetUserByHeaderAuth(c echo.Context) (err error) {
+func (userHandler UserHandler) GetLoggedInUser(c echo.Context) (err error) {
     claims, err := GetCustomClaims(c)
 
     if err != nil {
@@ -37,12 +37,15 @@ func (userHandler UserHandler) GetUserByHeaderAuth(c echo.Context) (err error) {
     return c.JSON(http.StatusOK, existingUser)
 }
 
+//TODO: access control - research
+//  -claims.UserId must have 'admin' role to add a user
+//  -still needs to be available for users to sign up
+//    but that could be a /signup that calls this w/ an admin token
 func (userHandler UserHandler) AddUser(c echo.Context) (err error) {
 	newUser := new(data.User)
 	if err = c.Bind(newUser); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-    fmt.Printf("%+v\n", newUser)
 
 	var existingUser data.User
 	userHandler.Db.Where("email = ?", newUser.Email).First(&existingUser)
