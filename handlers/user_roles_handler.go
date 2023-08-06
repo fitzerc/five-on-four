@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/fitzerc/five-on-four/data"
 	"github.com/labstack/echo/v4"
@@ -20,8 +21,9 @@ func (roleHandler UserRolesHandler) AddUserRole(c echo.Context) (err error) {
         return echo.NewHTTPError(http.StatusBadRequest, err.Error())
     }
 
-    roleHandler.Db.Save(&newRole)
+    newRole.Role = strings.ToLower(newRole.Role)
 
+    roleHandler.Db.Save(&newRole)
     return c.String(http.StatusOK, "success")
 }
 

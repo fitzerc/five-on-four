@@ -18,7 +18,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Err loading .env file")
 	}
-
+    
 	dbName := os.Getenv("DB_NAME")
     db := data.InitDb(dbName);
 
@@ -27,11 +27,12 @@ func main() {
     userHandler := &handlers.UserHandler{Db: db}
     tokenHandler := &handlers.TokenHandler{Db: db}
     userRolesHandler := &handlers.UserRolesHandler{Db: db}
+    leaguesHandler := &handlers.LeaguesHandler{Db: db}
 
     //Unprotected.
     //TODO: move AddUser to protected at some point
-	e.POST("/users", userHandler.AddUser)
-	e.POST("/apitoken", tokenHandler.GetApiToken)
+    e.POST("/users", userHandler.AddUser)
+    e.POST("/apitoken", tokenHandler.GetApiToken)
 
     //map endpoints
     apiGroup := e.Group("/api")
@@ -44,13 +45,19 @@ func main() {
     }))
 
 	apiGroup.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "ok")
+	    return c.String(http.StatusOK, "ok")
 	})
 
     apiGroup.GET("/users", userHandler.GetLoggedInUser)
     apiGroup.POST("/users/roles", userRolesHandler.AddUserRole)
     apiGroup.GET("/users/:id/roles", userRolesHandler.GetRolesByUserId)
     apiGroup.DELETE("/users/:id/roles/:roleId", userRolesHandler.RemoveRoleFromUser)
+
+    //Leagues
+    apiGroup.POST("/leagues", leaguesHandler.AddLeague)
+    apiGroup.DELETE("/leagues/:id", leaguesHandler.DeleteLeague)
+    apiGroup.GET("/leagues/:id", leaguesHandler.GetLeagueById)
+    apiGroup.GET("/leagues", leaguesHandler.GetLeagues)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

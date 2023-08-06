@@ -29,3 +29,9 @@ type ErrorResponse struct {
 	ErrorCode        string `json:"error_code"`
 	ErrorDescription string `json:"error_description"`
 }
+
+type League struct {
+    gorm.Model
+    LeagueName     string `json:"league_name"`
+    ActiveSeasonId uint   `json:"active_season_id"`
+}

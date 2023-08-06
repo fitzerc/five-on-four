@@ -13,7 +13,7 @@ func InitDb(sqliteDbName string) gorm.DB {
         panic("failed to connect to database")
     }
 
-	db.AutoMigrate(&User{}, &UserRole{}, &ReadReceipt{})
+	db.AutoMigrate(&User{}, &UserRole{}, &ReadReceipt{}, &League{})
     initData(db)
 
     return *db;
@@ -21,19 +21,19 @@ func InitDb(sqliteDbName string) gorm.DB {
 
 //TODO: replace hard-coded user with a more secure
 //      way to create accounts outside of the api
-func initData(db *gorm.DB) {
+func initData(db *gorm.DB) error {
     var existingUser User
     err := db.First(&existingUser).Error
 
     if err == nil {
-        return
+        return nil
     }
 
     if err.Error() == "record not found" {
         hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
 
         if err != nil {
-            panic(err)
+            return err
         }
 
         db.Create(&User{
@@ -49,8 +49,8 @@ func initData(db *gorm.DB) {
             RoleDescription: "THE admin",
         })
 
-        return
+        return nil
     }
 
-    panic(err)
+    return err
 }
