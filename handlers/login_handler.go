@@ -102,5 +102,5 @@ func JWTErrorChecker(err error, c echo.Context) error {
     fmt.Printf("%+v", err)
     fmt.Println("Context:")
     fmt.Printf("%+v", c)
-	return c.Redirect(http.StatusMovedPermanently, c.Echo().Reverse("userSignInForm"))
+    return echo.ErrUnauthorized
 }
