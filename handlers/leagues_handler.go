@@ -1,24 +1,23 @@
 package handlers
 
 import (
-    "net/http"
+	"net/http"
+	"strconv"
 
-    "github.com/fitzerc/five-on-four/data"
-    "github.com/labstack/echo/v4"
-    "gorm.io/gorm"
+	"github.com/fitzerc/five-on-four/data"
+	"github.com/fitzerc/five-on-four/guts"
+	"github.com/labstack/echo/v4"
 )
 
 type LeaguesHandler struct {
-    Db gorm.DB
+    LeagueGuts guts.LeagueGuts
+    UserGuts   guts.UserGuts
 }
 
-//TODO: GetAllLeagues
-//TODO: GetLeagueById
 //TODO: GetLeaguesByQueryString?
 
 func (lh LeaguesHandler) GetLeagues(c echo.Context) (err error) {
-    var leagues []data.League
-    err = lh.Db.Find(&leagues).Error
+    leagues, err := lh.LeagueGuts.GetAll()
 
     if err != nil {
         return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
@@ -32,9 +31,7 @@ func (lh LeaguesHandler) GetLeagues(c echo.Context) (err error) {
 
 func (lh LeaguesHandler) GetLeagueById(c echo.Context) (err error) {
     id := c.Param("id")
-
-    var league data.League
-    err = lh.Db.First(&league, id).Error
+    league, err := lh.LeagueGuts.GetById(id)
 
     if err != nil {
         return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
@@ -48,7 +45,14 @@ func (lh LeaguesHandler) GetLeagueById(c echo.Context) (err error) {
 
 //Admin only
 func (lh LeaguesHandler) DeleteLeague(c echo.Context) (err error) {
-    userIsAdmin, err := userIsAdmin(c, &lh.Db)
+    claims, err := GetCustomClaims(c)
+
+    if err != nil {
+        return err
+    }
+
+    //TODO: replace with shared uint to string util
+    userIsAdmin, err := lh.UserGuts.IsAdmin(strconv.FormatUint(uint64(claims.ID), 10))
 
     if err != nil {
         return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
@@ -59,7 +63,14 @@ func (lh LeaguesHandler) DeleteLeague(c echo.Context) (err error) {
 
     if userIsAdmin {
         id := c.Param("id")
-        lh.Db.Delete(&data.League{}, id)
+        err = lh.LeagueGuts.Delete(id)
+
+        if err != nil {
+            return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+                ErrorCode: "invalid_token",
+                ErrorDescription: err.Error(),
+            })
+        }
 
         return c.JSON(http.StatusOK, "success")
     }
@@ -72,7 +83,14 @@ func (lh LeaguesHandler) DeleteLeague(c echo.Context) (err error) {
 
 //Admin only
 func (lh LeaguesHandler) AddLeague(c echo.Context) (err error) {
-    userIsAdmin, err := userIsAdmin(c, &lh.Db)
+    claims, err := GetCustomClaims(c)
+
+    if err != nil {
+        return err
+    }
+
+    //TODO: replace with shared uint to string util
+    userIsAdmin, err := lh.UserGuts.IsAdmin(strconv.FormatUint(uint64(claims.ID), 10))
 
     if err != nil {
         return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
@@ -88,7 +106,15 @@ func (lh LeaguesHandler) AddLeague(c echo.Context) (err error) {
             return echo.NewHTTPError(http.StatusBadRequest, err.Error())
         }
 
-        lh.Db.Save(&newLeague)
+        err = lh.LeagueGuts.Add(*newLeague)
+
+        if err != nil {
+            return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+                ErrorCode: "unknown_error",
+                ErrorDescription: err.Error(),
+            })
+        }
+
         return c.String(http.StatusOK, "success")
     }
 
@@ -96,29 +122,4 @@ func (lh LeaguesHandler) AddLeague(c echo.Context) (err error) {
         ErrorCode: "unauthorized",
         ErrorDescription: "action not permitted",
     })
-}
-
-func userIsAdmin(c echo.Context, db *gorm.DB) (bool, error) {
-    claims, err := GetCustomClaims(c)
-
-    if err != nil {
-        return false, err
-    }
-
-    var roles []data.UserRole
-    err = db.Where("id = ?", claims.ID).Find(&roles).Error
-
-    if err != nil {
-        return false, err
-    }
-
-    isAdmin := false
-
-    for _, r := range roles {
-        if r.Role == "admin" {
-            isAdmin = true
-        }
-    }
-
-    return isAdmin, nil
 }

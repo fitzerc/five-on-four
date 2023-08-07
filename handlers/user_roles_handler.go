@@ -15,6 +15,7 @@ type UserRolesHandler struct {
 
 //TODO: access control
 // -claims.UserId must have 'admin' role
+// TODO: update to allow list of roles too
 func (roleHandler UserRolesHandler) AddUserRole(c echo.Context) (err error) {
     newRole := new(data.UserRole)
     if err = c.Bind(newRole); err != nil {

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/fitzerc/five-on-four/data"
+	"github.com/fitzerc/five-on-four/guts"
 	"github.com/fitzerc/five-on-four/handlers"
 	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
@@ -24,10 +25,17 @@ func main() {
 
 	e := echo.New()
 
+    //TODO: research how to manage these dependencies
+    leagueGuts := guts.NewLeagueGuts(db)
+    userGuts := guts.NewUserGuts(db)
+
     userHandler := &handlers.UserHandler{Db: db}
     tokenHandler := &handlers.TokenHandler{Db: db}
     userRolesHandler := &handlers.UserRolesHandler{Db: db}
-    leaguesHandler := &handlers.LeaguesHandler{Db: db}
+    leaguesHandler := &handlers.LeaguesHandler{
+        LeagueGuts: *leagueGuts,
+        UserGuts: *userGuts,
+    }
 
     //Unprotected.
     //TODO: move AddUser to protected at some point
