@@ -27,11 +27,12 @@ func main() {
 
     //TODO: research how to manage these dependencies
     leagueGuts := guts.NewLeagueGuts(db)
-    userGuts := guts.NewUserGuts(db)
+    userRoleGuts := guts.NewUserRoleGuts(db)
+    userGuts := guts.NewUserGuts(*userRoleGuts, db)
 
-    userHandler := &handlers.UserHandler{Db: db}
-    tokenHandler := &handlers.TokenHandler{Db: db}
-    userRolesHandler := &handlers.UserRolesHandler{Db: db}
+    userHandler := &handlers.UserHandler{UserGuts: *userGuts}
+    tokenHandler := &handlers.TokenHandler{UserGuts: *userGuts}
+    userRolesHandler := &handlers.UserRolesHandler{UserRoleGuts: *userRoleGuts}
     leaguesHandler := &handlers.LeaguesHandler{
         LeagueGuts: *leagueGuts,
         UserGuts: *userGuts,

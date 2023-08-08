@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/fitzerc/five-on-four/data"
+	"github.com/fitzerc/five-on-four/guts"
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 type UserRolesHandler struct {
-    Db gorm.DB
+    UserRoleGuts guts.UserRoleGuts
 }
 
 //TODO: access control
@@ -24,7 +24,7 @@ func (roleHandler UserRolesHandler) AddUserRole(c echo.Context) (err error) {
 
     newRole.Role = strings.ToLower(newRole.Role)
 
-    roleHandler.Db.Save(&newRole)
+    err = roleHandler.UserRoleGuts.Save(newRole)
     return c.String(http.StatusOK, "success")
 }
 
@@ -34,8 +34,7 @@ func (roleHandler UserRolesHandler) AddUserRole(c echo.Context) (err error) {
 func (roleHandler UserRolesHandler) GetRolesByUserId(c echo.Context) (err error){
     id := c.Param("id")
 
-    var roles []data.UserRole
-    err = roleHandler.Db.Where("user_id = ?", id).Find(&roles).Error
+    roles, err := roleHandler.UserRoleGuts.GetByQuery("user_id = ?", id)
 
     if err != nil {
         return echo.NewHTTPError(http.StatusBadRequest, err.Error)
@@ -50,14 +49,16 @@ func (roleHandler UserRolesHandler) RemoveRoleFromUser(c echo.Context) (err erro
     id := c.Param("id")
     roleId := c.Param("roleId")
 
-    var role data.UserRole
-    err = roleHandler.Db.Where("user_id = ? and id = ?", id, roleId).First(&role).Error
+    _, err = roleHandler.UserRoleGuts.GetByQuery("user_id = ? and id = ?", id, roleId)
 
     if err != nil {
         return echo.NewHTTPError(http.StatusBadRequest, err.Error)
     }
 
-    roleHandler.Db.Delete(&data.UserRole{}, roleId)
+    err = roleHandler.UserRoleGuts.Delete(roleId)
+    if err != nil {
+        return echo.NewHTTPError(http.StatusBadRequest, err.Error)
+    }
 
     return c.JSON(http.StatusOK, "success")
 }

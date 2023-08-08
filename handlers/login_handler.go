@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/fitzerc/five-on-four/data"
+	"github.com/fitzerc/five-on-four/guts"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type JwtCustomClaims struct {
@@ -26,7 +26,7 @@ type loginRequest struct {
 }
 
 type TokenHandler struct {
-    Db gorm.DB
+    UserGuts guts.UserGuts
 }
 
 func (tokenHandler TokenHandler) GetApiToken(c echo.Context) (err error) {
@@ -35,15 +35,16 @@ func (tokenHandler TokenHandler) GetApiToken(c echo.Context) (err error) {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	var user data.User
-	tokenHandler.Db.Where("email = ?", loginReq.Email).First(&user)
+    users, err := tokenHandler.UserGuts.GetByQuery("email = ?", loginReq.Email)
 
-	if user.ID == 0 {
+	if len(users) == 0 || users[0].ID == 0 {
 		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
 			ErrorCode:        "invalid_credentials",
 			ErrorDescription: "unable to login",
 		})
 	}
+
+    user := users[0]
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginReq.Password))
 

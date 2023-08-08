@@ -1,17 +1,17 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/fitzerc/five-on-four/data"
+	"github.com/fitzerc/five-on-four/guts"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type UserHandler struct {
-    Db gorm.DB
+    UserGuts guts.UserGuts
 }
 
 func (userHandler UserHandler) GetLoggedInUser(c echo.Context) (err error) {
@@ -24,8 +24,9 @@ func (userHandler UserHandler) GetLoggedInUser(c echo.Context) (err error) {
         })
     }
 
-	var existingUser data.User
-	userHandler.Db.Where("id = ?", claims.ID).First(&existingUser)
+    //TODO: replace with shared uint to string util
+    existingUser, err := userHandler.UserGuts.GetById(
+        strconv.FormatUint(uint64(claims.ID), 10))
 
     if existingUser.ID == 0 {
         return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
@@ -47,10 +48,16 @@ func (userHandler UserHandler) AddUser(c echo.Context) (err error) {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	var existingUser data.User
-	userHandler.Db.Where("email = ?", newUser.Email).First(&existingUser)
+    users, err := userHandler.UserGuts.GetByQuery("email = ?", newUser.Email)
 
-	if existingUser.ID > 0 {
+    if err != nil {
+		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+			ErrorCode:        "unknown_error",
+			ErrorDescription: err.Error(),
+		})
+    }
+
+	if len(users) > 0 && users[0].ID > 0 {
 		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
 			ErrorCode:        "duplicate_user",
 			ErrorDescription: "user already exists",
@@ -66,9 +73,15 @@ func (userHandler UserHandler) AddUser(c echo.Context) (err error) {
 		})
 	}
 
-    fmt.Printf("%+v\n", newUser)
 	newUser.Password = string(hashedPassword)
-	userHandler.Db.Save(&newUser)
+    err = userHandler.UserGuts.Save(newUser)
+
+    if err != nil {
+		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+			ErrorCode:        "unknown_error",
+			ErrorDescription: err.Error(),
+		})
+    }
 
 	return c.String(http.StatusOK, "success")
 }
