@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/fitzerc/five-on-four/data"
 	"github.com/fitzerc/five-on-four/guts"
+	"github.com/fitzerc/five-on-four/utils"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -24,9 +24,7 @@ func (userHandler UserHandler) GetLoggedInUser(c echo.Context) (err error) {
         })
     }
 
-    //TODO: replace with shared uint to string util
-    existingUser, err := userHandler.UserGuts.GetById(
-        strconv.FormatUint(uint64(claims.ID), 10))
+    existingUser, err := userHandler.UserGuts.GetById(utils.UintToString(claims.ID))
 
     if existingUser.ID == 0 {
         return c.JSON(http.StatusBadRequest, &data.ErrorResponse{

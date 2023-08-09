@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/fitzerc/five-on-four/data"
 	"github.com/fitzerc/five-on-four/guts"
@@ -21,8 +20,6 @@ func (roleHandler UserRolesHandler) AddUserRole(c echo.Context) (err error) {
     if err = c.Bind(newRole); err != nil {
         return echo.NewHTTPError(http.StatusBadRequest, err.Error())
     }
-
-    newRole.Role = strings.ToLower(newRole.Role)
 
     err = roleHandler.UserRoleGuts.Save(newRole)
     return c.String(http.StatusOK, "success")

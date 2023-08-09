@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/fitzerc/five-on-four/data"
 	"github.com/fitzerc/five-on-four/guts"
+	"github.com/fitzerc/five-on-four/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -51,8 +51,7 @@ func (lh LeaguesHandler) DeleteLeague(c echo.Context) (err error) {
         return err
     }
 
-    //TODO: replace with shared uint to string util
-    userIsAdmin, err := lh.UserGuts.IsAdmin(strconv.FormatUint(uint64(claims.ID), 10))
+    userIsAdmin, err := lh.UserGuts.IsAdmin(utils.UintToString(claims.ID))
 
     if err != nil {
         return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
@@ -89,8 +88,7 @@ func (lh LeaguesHandler) AddLeague(c echo.Context) (err error) {
         return err
     }
 
-    //TODO: replace with shared uint to string util
-    userIsAdmin, err := lh.UserGuts.IsAdmin(strconv.FormatUint(uint64(claims.ID), 10))
+    userIsAdmin, err := lh.UserGuts.IsAdmin(utils.UintToString(claims.ID))
 
     if err != nil {
         return c.JSON(http.StatusBadRequest, &data.ErrorResponse{

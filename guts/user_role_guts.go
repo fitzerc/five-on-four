@@ -1,6 +1,8 @@
 package guts
 
 import (
+	"strings"
+
 	"github.com/fitzerc/five-on-four/data"
 	"gorm.io/gorm"
 )
@@ -14,6 +16,7 @@ func NewUserRoleGuts(db gorm.DB) *UserRoleGuts {
 }
 
 func (urg UserRoleGuts) Save(newUserRole *data.UserRole) error {
+    newUserRole.Role = strings.ToLower(newUserRole.Role)
     return urg.db.Save(&newUserRole).Error
 }
 
