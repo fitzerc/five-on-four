@@ -19,54 +19,45 @@ func main() {
 	if err != nil {
 		log.Fatal("Err loading .env file")
 	}
-    
+
 	dbName := os.Getenv("DB_NAME")
-    db := data.InitDb(dbName);
+	db := data.InitDb(dbName)
 
 	e := echo.New()
 
-    //TODO: research how to manage these dependencies
-    leagueGuts := guts.NewLeagueGuts(db)
-    userRoleGuts := guts.NewUserRoleGuts(db)
-    userGuts := guts.NewUserGuts(*userRoleGuts, db)
+	//TODO: research how to manage these dependencies
+	// use wire or do manually
+	leagueGuts := guts.NewLeagueGuts(db)
+	userRoleGuts := guts.NewUserRoleGuts(db)
+	userGuts := guts.NewUserGuts(*userRoleGuts, db)
 
-    userHandler := &handlers.UserHandler{UserGuts: *userGuts}
-    tokenHandler := &handlers.TokenHandler{UserGuts: *userGuts}
-    userRolesHandler := &handlers.UserRolesHandler{UserRoleGuts: *userRoleGuts}
-    leaguesHandler := &handlers.LeaguesHandler{
-        LeagueGuts: *leagueGuts,
-        UserGuts: *userGuts,
-    }
+	userHandler := &handlers.UserHandler{UserGuts: *userGuts}
+	tokenHandler := &handlers.TokenHandler{UserGuts: *userGuts}
+	userRolesHandler := &handlers.UserRolesHandler{UserRoleGuts: *userRoleGuts}
+	leaguesHandler := &handlers.LeaguesHandler{
+		LeagueGuts: *leagueGuts,
+		UserGuts:   *userGuts,
+	}
 
-    //Unprotected.
-    //TODO: move AddUser to protected at some point
-    e.POST("/users", userHandler.AddUser)
-    e.POST("/apitoken", tokenHandler.GetApiToken)
+	//Unprotected.
+	e.POST("/apitoken", tokenHandler.GetApiToken)
 
-    //map endpoints
-    apiGroup := e.Group("/api")
-
-    apiGroup.Use(middleware.JWTWithConfig(middleware.JWTConfig{
-        Claims: &jwt.StandardClaims{},
-        SigningKey: []byte(os.Getenv("SECRET_KEY")),
-        TokenLookup: "header:Authorization",
-        ErrorHandlerWithContext: handlers.JWTErrorChecker,
-    }))
+	//map endpoints
+	apiGroup := e.Group("/api")
+	apiGroup.Use(middleware.JWTWithConfig(middleware.JWTConfig{
+		Claims:                  &jwt.StandardClaims{},
+		SigningKey:              []byte(os.Getenv("SECRET_KEY")),
+		TokenLookup:             "header:Authorization",
+		ErrorHandlerWithContext: handlers.JWTErrorChecker,
+	}))
 
 	apiGroup.GET("/", func(c echo.Context) error {
-	    return c.String(http.StatusOK, "ok")
+		return c.String(http.StatusOK, "ok")
 	})
 
-    apiGroup.GET("/users", userHandler.GetLoggedInUser)
-    apiGroup.POST("/users/roles", userRolesHandler.AddUserRole)
-    apiGroup.GET("/users/:id/roles", userRolesHandler.GetRolesByUserId)
-    apiGroup.DELETE("/users/:id/roles/:roleId", userRolesHandler.RemoveRoleFromUser)
-
-    //Leagues
-    apiGroup.POST("/leagues", leaguesHandler.AddLeague)
-    apiGroup.DELETE("/leagues/:id", leaguesHandler.DeleteLeague)
-    apiGroup.GET("/leagues/:id", leaguesHandler.GetLeagueById)
-    apiGroup.GET("/leagues", leaguesHandler.GetLeagues)
+	userHandler.RegisterEndpoints(apiGroup)
+	userRolesHandler.RegisterEndpoints(apiGroup)
+	leaguesHandler.RegisterEndpoints(apiGroup)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
