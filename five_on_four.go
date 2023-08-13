@@ -63,5 +63,5 @@ func main() {
 	userRolesHandler.RegisterEndpoints(apiGroup)
 	leaguesHandler.RegisterEndpoints(apiGroup)
 
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.Start(":" + os.Getenv("API_PORT")))
 }
