@@ -1,6 +1,8 @@
 package data
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -14,14 +16,14 @@ type User struct {
 
 type UserRole struct {
 	gorm.Model
-    UserId          uint   `json:"user_id"`
-    Role            string `json:"role"`
-    RoleDescription string `json:"role_description"`
+	UserId          uint   `json:"user_id"`
+	Role            string `json:"role"`
+	RoleDescription string `json:"role_description"`
 }
 
 type ReadReceipt struct {
 	gorm.Model
-    UserId  uint `json:"user_id"`
+	UserId  uint `json:"user_id"`
 	HasRead bool `gorm:"default:false"`
 }
 
@@ -31,7 +33,15 @@ type ErrorResponse struct {
 }
 
 type League struct {
-    gorm.Model
-    LeagueName     string `json:"league_name"`
-    ActiveSeasonId uint   `json:"active_season_id"`
+	gorm.Model
+	LeagueName     string `json:"league_name"`
+	ActiveSeasonId uint   `json:"active_season_id"`
+}
+
+type Season struct {
+	gorm.Model
+	LeagueId   uint      `json:"league_id"`
+	SeasonName string    `json:"season_name"`
+	StartDate  time.Time `json:"start_date"`
+	EndDate    time.Time `json:"end_date"`
 }

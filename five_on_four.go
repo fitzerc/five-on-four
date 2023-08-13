@@ -30,6 +30,7 @@ func main() {
 	leagueGuts := guts.NewLeagueGuts(db)
 	userRoleGuts := guts.NewUserRoleGuts(db)
 	userGuts := guts.NewUserGuts(*userRoleGuts, db)
+	seasonGuts := guts.NewSeasonGuts(db)
 
 	userHandler := &handlers.UserHandler{UserGuts: *userGuts}
 	tokenHandler := &handlers.TokenHandler{UserGuts: *userGuts}
@@ -40,6 +41,10 @@ func main() {
 	leaguesHandler := &handlers.LeaguesHandler{
 		LeagueGuts:  *leagueGuts,
 		UserGuts:    *userGuts,
+		UserHandler: *userHandler,
+	}
+	seasonsHandler := &handlers.SeasonsHandler{
+		SeasonGuts:  *seasonGuts,
 		UserHandler: *userHandler,
 	}
 
@@ -62,6 +67,7 @@ func main() {
 	userHandler.RegisterEndpoints(apiGroup)
 	userRolesHandler.RegisterEndpoints(apiGroup)
 	leaguesHandler.RegisterEndpoints(apiGroup)
+	seasonsHandler.RegisterEndpoints(apiGroup)
 
 	e.Logger.Fatal(e.Start(":" + os.Getenv("API_PORT")))
 }

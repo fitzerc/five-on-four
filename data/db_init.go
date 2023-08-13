@@ -9,48 +9,49 @@ import (
 func InitDb(sqliteDbName string) gorm.DB {
 	db, err := gorm.Open(sqlite.Open(sqliteDbName), &gorm.Config{})
 
-    if err != nil {
-        panic("failed to connect to database")
-    }
+	if err != nil {
+		panic("failed to connect to database")
+	}
 
-	db.AutoMigrate(&User{}, &UserRole{}, &ReadReceipt{}, &League{})
-    initData(db)
+	db.AutoMigrate(&User{}, &UserRole{}, &ReadReceipt{}, &League{}, &Season{})
+	initData(db)
 
-    return *db;
+	return *db
 }
 
-//TODO: replace hard-coded user with a more secure
-//      way to create accounts outside of the api
+// TODO: replace hard-coded user with a more secure
+//
+//	way to create accounts outside of the api
 func initData(db *gorm.DB) error {
-    var existingUser User
-    err := db.First(&existingUser).Error
+	var existingUser User
+	err := db.First(&existingUser).Error
 
-    if err == nil {
-        return nil
-    }
+	if err == nil {
+		return nil
+	}
 
-    if err.Error() == "record not found" {
-        hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
+	if err.Error() == "record not found" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
 
-        if err != nil {
-            return err
-        }
+		if err != nil {
+			return err
+		}
 
-        db.Create(&User{
-            Email: "admin@admin",
-            Password: string(hashedPassword),
-            FirstName: "Honorable",
-            LastName: "Admin",
-        })
+		db.Create(&User{
+			Email:     "admin@admin",
+			Password:  string(hashedPassword),
+			FirstName: "Honorable",
+			LastName:  "Admin",
+		})
 
-        db.Create(&UserRole{
-            UserId: 1,
-            Role: "admin",
-            RoleDescription: "THE admin",
-        })
+		db.Create(&UserRole{
+			UserId:          1,
+			Role:            "admin",
+			RoleDescription: "THE admin",
+		})
 
-        return nil
-    }
+		return nil
+	}
 
-    return err
+	return err
 }
