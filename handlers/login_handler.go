@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -17,7 +16,7 @@ import (
 type JwtCustomClaims struct {
 	Email string `json:"email"`
 	ID    uint   `json:"id"`
-    jwt.StandardClaims
+	jwt.StandardClaims
 }
 
 type loginRequest struct {
@@ -26,7 +25,7 @@ type loginRequest struct {
 }
 
 type TokenHandler struct {
-    UserGuts guts.UserGuts
+	UserGuts guts.UserGuts
 }
 
 func (tokenHandler TokenHandler) GetApiToken(c echo.Context) (err error) {
@@ -35,7 +34,7 @@ func (tokenHandler TokenHandler) GetApiToken(c echo.Context) (err error) {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-    users, err := tokenHandler.UserGuts.GetByQuery("email = ?", loginReq.Email)
+	users, err := tokenHandler.UserGuts.GetByQuery("email = ?", loginReq.Email)
 
 	if len(users) == 0 || users[0].ID == 0 {
 		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
@@ -44,7 +43,7 @@ func (tokenHandler TokenHandler) GetApiToken(c echo.Context) (err error) {
 		})
 	}
 
-    user := users[0]
+	user := users[0]
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginReq.Password))
 
@@ -58,8 +57,8 @@ func (tokenHandler TokenHandler) GetApiToken(c echo.Context) (err error) {
 	claims := &JwtCustomClaims{
 		user.Email,
 		user.ID,
-        jwt.StandardClaims{
-            ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 		},
 	}
 
@@ -77,31 +76,27 @@ func (tokenHandler TokenHandler) GetApiToken(c echo.Context) (err error) {
 }
 
 func GetCustomClaims(c echo.Context) (JwtCustomClaims, error) {
-    tokenString := c.Get("user").(*jwt.Token).Raw
+	tokenString := c.Get("user").(*jwt.Token).Raw
 
-    token, err := jwt.ParseWithClaims(tokenString, &JwtCustomClaims{},
-        func(token *jwt.Token) (interface{}, error) {
-	        return []byte(os.Getenv("SECRET_KEY")), nil
-        })
+	token, err := jwt.ParseWithClaims(tokenString, &JwtCustomClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			return []byte(os.Getenv("SECRET_KEY")), nil
+		})
 
-    if err != nil {
-        return JwtCustomClaims{}, err
-    }
+	if err != nil {
+		return JwtCustomClaims{}, err
+	}
 
-    claims, ok := token.Claims.(*JwtCustomClaims)
+	claims, ok := token.Claims.(*JwtCustomClaims)
 
-    if ok {
-        return *claims, nil
-    }
+	if ok {
+		return *claims, nil
+	}
 
-    return *claims, errors.New("unable to get claims from token")
+	return *claims, errors.New("unable to get claims from token")
 }
 
 func JWTErrorChecker(err error, c echo.Context) error {
-    // Redirects to the signIn form.
-    fmt.Println("Error:")
-    fmt.Printf("%+v", err)
-    fmt.Println("Context:")
-    fmt.Printf("%+v", c)
-    return echo.ErrUnauthorized
+	// Redirects to the signIn form.
+	return echo.ErrUnauthorized
 }

@@ -10,17 +10,15 @@ import (
 
 type UserRolesHandler struct {
 	UserRoleGuts guts.UserRoleGuts
+	UserHandler  UserHandler
 }
 
 func (urh UserRolesHandler) RegisterEndpoints(group *echo.Group) {
 	group.POST("/users/roles", urh.AddUserRole)
 	group.GET("/users/:id/roles", urh.GetRolesByUserId)
-	group.DELETE("/users/:id/roles/:roleId", urh.RemoveRoleFromUser)
+	group.DELETE("/users/:id/roles/:roleId", urh.RemoveRoleFromUser, urh.UserHandler.MustBeAdmin())
 }
 
-// TODO: access control
-// -claims.UserId must have 'admin' role
-// TODO: update to allow list of roles too
 func (roleHandler UserRolesHandler) AddUserRole(c echo.Context) (err error) {
 	newRole := new(data.UserRole)
 	if err = c.Bind(newRole); err != nil {
@@ -31,10 +29,6 @@ func (roleHandler UserRolesHandler) AddUserRole(c echo.Context) (err error) {
 	return c.String(http.StatusOK, "success")
 }
 
-// TODO: access control
-// -claims.UserId must have 'admin' role or
-//
-//	claims.UserId must equal the id passed in query string
 func (roleHandler UserRolesHandler) GetRolesByUserId(c echo.Context) (err error) {
 	id := c.Param("id")
 
@@ -47,8 +41,6 @@ func (roleHandler UserRolesHandler) GetRolesByUserId(c echo.Context) (err error)
 	return c.JSON(http.StatusOK, roles)
 }
 
-// TODO: access control
-// -claims.UserId must have 'admin' role
 func (roleHandler UserRolesHandler) RemoveRoleFromUser(c echo.Context) (err error) {
 	id := c.Param("id")
 	roleId := c.Param("roleId")

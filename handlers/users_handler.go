@@ -19,6 +19,40 @@ func (uh UserHandler) RegisterEndpoints(group *echo.Group) {
 	group.GET("/users", uh.GetLoggedInUser)
 }
 
+func (uh UserHandler) MustBeAdmin() echo.MiddlewareFunc {
+
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			claims, err := GetCustomClaims(c)
+
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+					ErrorCode:        "invalid_token",
+					ErrorDescription: err.Error(),
+				})
+			}
+
+			isAdmin, err := uh.UserGuts.IsAdmin(utils.UintToString(claims.ID))
+
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+					ErrorCode:        "internal_error",
+					ErrorDescription: err.Error(),
+				})
+			}
+
+			if !isAdmin {
+				return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+					ErrorCode:        "unauthorized",
+					ErrorDescription: "You can't do that",
+				})
+			}
+
+			return next(c)
+		}
+	}
+}
+
 func (userHandler UserHandler) GetLoggedInUser(c echo.Context) (err error) {
 	claims, err := GetCustomClaims(c)
 

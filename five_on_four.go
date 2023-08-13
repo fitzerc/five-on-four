@@ -33,10 +33,14 @@ func main() {
 
 	userHandler := &handlers.UserHandler{UserGuts: *userGuts}
 	tokenHandler := &handlers.TokenHandler{UserGuts: *userGuts}
-	userRolesHandler := &handlers.UserRolesHandler{UserRoleGuts: *userRoleGuts}
+	userRolesHandler := &handlers.UserRolesHandler{
+		UserRoleGuts: *userRoleGuts,
+		UserHandler:  *userHandler,
+	}
 	leaguesHandler := &handlers.LeaguesHandler{
-		LeagueGuts: *leagueGuts,
-		UserGuts:   *userGuts,
+		LeagueGuts:  *leagueGuts,
+		UserGuts:    *userGuts,
+		UserHandler: *userHandler,
 	}
 
 	//Unprotected.
