@@ -41,7 +41,7 @@ func (ug UserGuts) GetById(id string) (data.User, error) {
 
 func (ug UserGuts) GetByQuery(query string, args ...interface{}) ([]data.User, error) {
 	var users []data.User
-	err := ug.db.Where(query, args).Find(&users).Error
+	err := ug.db.Where(query, args...).Find(&users).Error
 	return users, err
 }
 

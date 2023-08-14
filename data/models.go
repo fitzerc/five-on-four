@@ -8,16 +8,16 @@ import (
 
 type User struct {
 	gorm.Model
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	Email     string `json:"email" gorm:"not null"`
+	Password  string `json:"password" gorm:"not null"`
+	FirstName string `json:"first_name" gorm:"not null"`
+	LastName  string `json:"last_name" gorm:"not null"`
 }
 
 type UserRole struct {
 	gorm.Model
-	UserId          uint   `json:"user_id"`
-	Role            string `json:"role"`
+	UserId          uint   `json:"user_id" gorm:"not null"`
+	Role            string `json:"role" gorm:"not null"`
 	RoleDescription string `json:"role_description"`
 }
 
@@ -34,14 +34,25 @@ type ErrorResponse struct {
 
 type League struct {
 	gorm.Model
-	LeagueName     string `json:"league_name"`
+	LeagueName     string `json:"league_name" gorm:"not null"`
 	ActiveSeasonId uint   `json:"active_season_id"`
 }
 
 type Season struct {
 	gorm.Model
-	LeagueId   uint      `json:"league_id"`
-	SeasonName string    `json:"season_name"`
+	LeagueId   uint      `json:"league_id" gorm:"not null"`
+	SeasonName string    `json:"season_name" gorm:"not null"`
 	StartDate  time.Time `json:"start_date"`
 	EndDate    time.Time `json:"end_date"`
+}
+
+type Team struct {
+	gorm.Model
+	SeasonId uint   `json:"season_id" gorm:"not null"`
+	TeamName string `json:"team_name" gorm:"not null"`
+}
+
+type TeamMessageBoard struct {
+	gorm.Model
+	TeamId uint `json:"team_id" gorm:"not null"`
 }

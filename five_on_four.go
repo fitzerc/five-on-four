@@ -31,6 +31,8 @@ func main() {
 	userRoleGuts := guts.NewUserRoleGuts(db)
 	userGuts := guts.NewUserGuts(*userRoleGuts, db)
 	seasonGuts := guts.NewSeasonGuts(db)
+	teamGuts := guts.NewTeamGuts(db)
+	teamMessageBoardGuts := guts.NewTeamMessageBoardGuts(db)
 
 	userHandler := &handlers.UserHandler{UserGuts: *userGuts}
 	tokenHandler := &handlers.TokenHandler{UserGuts: *userGuts}
@@ -46,6 +48,14 @@ func main() {
 	seasonsHandler := &handlers.SeasonsHandler{
 		SeasonGuts:  *seasonGuts,
 		UserHandler: *userHandler,
+	}
+	teamsHandler := &handlers.TeamsHandler{
+		TeamGuts:             *teamGuts,
+		TeamMessageBoardGuts: *teamMessageBoardGuts,
+		UserHandler:          *userHandler,
+	}
+	teamMessageBoardHandler := &handlers.TeamMessageBoardsHandler{
+		TeamMessageBoardGuts: *teamMessageBoardGuts,
 	}
 
 	//Unprotected.
@@ -68,6 +78,8 @@ func main() {
 	userRolesHandler.RegisterEndpoints(apiGroup)
 	leaguesHandler.RegisterEndpoints(apiGroup)
 	seasonsHandler.RegisterEndpoints(apiGroup)
+	teamsHandler.RegisterEndpoints(apiGroup)
+	teamMessageBoardHandler.RegisterEndpoints(apiGroup)
 
 	e.Logger.Fatal(e.Start(":" + os.Getenv("API_PORT")))
 }

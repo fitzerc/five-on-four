@@ -13,7 +13,15 @@ func InitDb(sqliteDbName string) gorm.DB {
 		panic("failed to connect to database")
 	}
 
-	db.AutoMigrate(&User{}, &UserRole{}, &ReadReceipt{}, &League{}, &Season{})
+	db.AutoMigrate(
+		&User{},
+		&UserRole{},
+		&ReadReceipt{},
+		&League{},
+		&Season{},
+		&Team{},
+		&TeamMessageBoard{})
+
 	initData(db)
 
 	return *db
