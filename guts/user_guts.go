@@ -2,16 +2,18 @@ package guts
 
 import (
 	"github.com/fitzerc/five-on-four/data"
+	"github.com/fitzerc/five-on-four/repository"
 	"gorm.io/gorm"
 )
 
 type UserGuts struct {
 	userRoleGuts UserRoleGuts
+	userRepo     repository.UserRepo
 	db           gorm.DB
 }
 
-func NewUserGuts(userRoleGuts UserRoleGuts, db gorm.DB) *UserGuts {
-	return &UserGuts{userRoleGuts: userRoleGuts, db: db}
+func NewUserGuts(userRoleGuts UserRoleGuts, userRepo repository.UserRepo, db gorm.DB) *UserGuts {
+	return &UserGuts{userRoleGuts: userRoleGuts, userRepo: userRepo, db: db}
 }
 
 func (ug UserGuts) IsAdmin(id string) (bool, error) {

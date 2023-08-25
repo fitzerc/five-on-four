@@ -56,3 +56,18 @@ type TeamMessageBoard struct {
 	gorm.Model
 	TeamId uint `json:"team_id" gorm:"not null"`
 }
+
+type Player struct {
+	gorm.Model
+	UserId       uint `json:"user_id" gorm:"not null"`
+	TeamId       uint `json:"team_id" gorm:"not null"`
+	Position     string
+	JerseyNumber int
+}
+
+type PlayerRole struct {
+	gorm.Model
+	PlayerId        uint   `json:"player_id" gorm:"not null"`
+	Role            string `gorm:"not null"`
+	RoleDescription string `json:"role_description"`
+}

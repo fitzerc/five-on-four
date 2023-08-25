@@ -17,12 +17,14 @@ func NewUserRoleGuts(db gorm.DB) *UserRoleGuts {
 
 func (urg UserRoleGuts) Save(newUserRole *data.UserRole) error {
 	newUserRole.Role = strings.ToLower(newUserRole.Role)
+
 	return urg.db.Save(&newUserRole).Error
 }
 
 func (urg UserRoleGuts) GetByQuery(query string, params ...interface{}) ([]data.UserRole, error) {
 	var roles []data.UserRole
-	err := urg.db.Where(query, params).Find(&roles).Error
+	err := urg.db.Where(query, params...).Find(&roles).Error
+
 	return roles, err
 }
 

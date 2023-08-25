@@ -13,6 +13,13 @@ func InitDb(sqliteDbName string) gorm.DB {
 		panic("failed to connect to database")
 	}
 
+	runMigrations(db)
+	initData(db)
+
+	return *db
+}
+
+func runMigrations(db *gorm.DB) {
 	db.AutoMigrate(
 		&User{},
 		&UserRole{},
@@ -20,11 +27,9 @@ func InitDb(sqliteDbName string) gorm.DB {
 		&League{},
 		&Season{},
 		&Team{},
-		&TeamMessageBoard{})
-
-	initData(db)
-
-	return *db
+		&TeamMessageBoard{},
+		&Player{},
+		&PlayerRole{})
 }
 
 // TODO: replace hard-coded user with a more secure
@@ -34,32 +39,32 @@ func initData(db *gorm.DB) error {
 	var existingUser User
 	err := db.First(&existingUser).Error
 
-	if err == nil {
-		return nil
-	}
-
-	if err.Error() == "record not found" {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
-
-		if err != nil {
-			return err
-		}
-
-		db.Create(&User{
-			Email:     "admin@admin",
-			Password:  string(hashedPassword),
-			FirstName: "Honorable",
-			LastName:  "Admin",
-		})
-
-		db.Create(&UserRole{
-			UserId:          1,
-			Role:            "admin",
-			RoleDescription: "THE admin",
-		})
-
-		return nil
+	if err != nil && err.Error() == "record not found" {
+		err = addDefaultUser(db)
 	}
 
 	return err
+}
+
+func addDefaultUser(db *gorm.DB) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
+
+	if err != nil {
+		return err
+	}
+
+	db.Create(&User{
+		Email:     "admin@admin",
+		Password:  string(hashedPassword),
+		FirstName: "Honorable",
+		LastName:  "Admin",
+	})
+
+	db.Create(&UserRole{
+		UserId:          1,
+		Role:            "admin",
+		RoleDescription: "THE admin",
+	})
+
+	return nil
 }

@@ -14,7 +14,7 @@ type UserRolesHandler struct {
 }
 
 func (urh UserRolesHandler) RegisterEndpoints(group *echo.Group) {
-	group.POST("/users/roles", urh.AddUserRole)
+	group.POST("/users/roles", urh.AddUserRole, urh.UserHandler.MustBeAdmin())
 	group.GET("/users/:id/roles", urh.GetRolesByUserId)
 	group.DELETE("/users/:id/roles/:roleId", urh.RemoveRoleFromUser, urh.UserHandler.MustBeAdmin())
 }
