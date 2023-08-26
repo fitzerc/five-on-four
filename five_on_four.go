@@ -40,7 +40,7 @@ func main() {
 
 	userHandler := &handlers.UserHandler{UserGuts: *userGuts}
 	tokenHandler := &handlers.TokenHandler{UserGuts: *userGuts}
-	userRolesHandler := &handlers.UserRolesHandler{
+	userRoleHandler := &handlers.UserRoleHandler{
 		UserRoleGuts: *userRoleGuts,
 		UserHandler:  *userHandler,
 	}
@@ -87,7 +87,7 @@ func main() {
 	})
 
 	userHandler.RegisterEndpoints(apiGroup)
-	userRolesHandler.RegisterEndpoints(apiGroup)
+	userRoleHandler.RegisterEndpoints(apiGroup)
 	leaguesHandler.RegisterEndpoints(apiGroup)
 	seasonsHandler.RegisterEndpoints(apiGroup)
 	teamsHandler.RegisterEndpoints(apiGroup)
