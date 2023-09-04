@@ -50,3 +50,8 @@ func (ug UserGuts) GetByQuery(query string, args ...interface{}) ([]data.User, e
 func (ug UserGuts) Save(newUser *data.User) error {
 	return ug.db.Save(&newUser).Error
 }
+
+func (ug UserGuts) Delete(id string) error {
+	//TODO: delete user's roles too
+	return ug.db.Delete(&data.User{}, id).Error
+}

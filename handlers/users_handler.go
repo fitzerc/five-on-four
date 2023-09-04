@@ -75,6 +75,50 @@ func (userHandler UserHandler) GetLoggedInUser(c echo.Context) (err error) {
 	return c.JSON(http.StatusOK, existingUser)
 }
 
+func (userHandler UserHandler) SignUp(c echo.Context) (err error) {
+	newUser := new(data.User)
+	if err = c.Bind(newUser); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	users, err := userHandler.UserGuts.GetByQuery("email = ?", newUser.Email)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+			ErrorCode:        "unknown_error",
+			ErrorDescription: err.Error(),
+		})
+	}
+
+	if len(users) > 0 && users[0].ID > 0 {
+		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+			ErrorCode:        "duplicate_user",
+			ErrorDescription: "user already exists",
+		})
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+			ErrorCode:        "invalid",
+			ErrorDescription: "password",
+		})
+	}
+
+	newUser.Password = string(hashedPassword)
+	err = userHandler.UserGuts.Save(newUser)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+			ErrorCode:        "unknown_error",
+			ErrorDescription: err.Error(),
+		})
+	}
+
+	return c.String(http.StatusOK, "success")
+}
+
 // TODO: access control - research
 //
 //	-claims.UserId must have 'admin' role to add a user
@@ -122,4 +166,18 @@ func (userHandler UserHandler) AddUser(c echo.Context) (err error) {
 	}
 
 	return c.String(http.StatusOK, "success")
+}
+
+func (uh UserHandler) DeleteUser(c echo.Context) (err error) {
+	id := c.Param("id")
+	err = uh.UserGuts.Delete(id)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, &data.ErrorResponse{
+			ErrorCode:        "invalid_token",
+			ErrorDescription: err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, "success")
 }

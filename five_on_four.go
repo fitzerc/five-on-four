@@ -25,6 +25,12 @@ func main() {
 	db := data.InitDb(dbName)
 
 	e := echo.New()
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowHeaders:     []string{"*, content-type, authorization"},
+		AllowCredentials: true,
+		AllowMethods:     []string{"GET,HEAD,OPTIONS,POST,PUT,DELETE"},
+	}))
 
 	//TODO: research how to manage these dependencies
 	// use wire or do manually
@@ -72,19 +78,24 @@ func main() {
 
 	//Unprotected.
 	e.POST("/apitoken", tokenHandler.GetApiToken)
+	e.POST("/login", tokenHandler.Login)
+	e.POST("/signup", userHandler.SignUp)
+	e.GET("/refresh", tokenHandler.RefreshToken)
 
 	//map endpoints
 	apiGroup := e.Group("/api")
 	apiGroup.Use(middleware.JWTWithConfig(middleware.JWTConfig{
 		Claims:                  &jwt.StandardClaims{},
 		SigningKey:              []byte(os.Getenv("SECRET_KEY")),
-		TokenLookup:             "header:Authorization",
+		TokenLookup:             "cookie:access_token, header:Authorization",
 		ErrorHandlerWithContext: handlers.JWTErrorChecker,
 	}))
 
 	apiGroup.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "ok")
 	})
+
+	apiGroup.GET("/logout", tokenHandler.Logout)
 
 	userHandler.RegisterEndpoints(apiGroup)
 	userRoleHandler.RegisterEndpoints(apiGroup)
