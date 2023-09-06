@@ -20,6 +20,7 @@ type LoginResponse struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Token     string `json:"token"`
+	Picture   []byte `json:"picture"`
 }
 
 type JwtCustomClaims struct {
@@ -56,6 +57,7 @@ func (tokenHandler TokenHandler) RefreshToken(c echo.Context) (err error) {
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Token:     t,
+		Picture:   user.Picture,
 	}
 
 	c = addRefreshTokenCookie(c, rt)
@@ -108,6 +110,7 @@ func (tokenHandler TokenHandler) Login(c echo.Context) (err error) {
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Token:     t,
+		Picture:   user.Picture,
 	}
 
 	c = addRefreshTokenCookie(c, rt)

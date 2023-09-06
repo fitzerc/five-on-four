@@ -55,3 +55,7 @@ func (ug UserGuts) Delete(id string) error {
 	//TODO: delete user's roles too
 	return ug.db.Delete(&data.User{}, id).Error
 }
+
+func (ug UserGuts) UpdateImage(user data.User) error {
+	return ug.db.Model(&user).Update("picture", user.Picture).Error
+}

@@ -12,6 +12,7 @@ type User struct {
 	Password  string `json:"password" gorm:"not null"`
 	FirstName string `json:"first_name" gorm:"not null"`
 	LastName  string `json:"last_name" gorm:"not null"`
+	Picture   []byte `json:"picture"`
 }
 
 type UserRole struct {
