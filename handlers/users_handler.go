@@ -193,6 +193,7 @@ func (userHandler UserHandler) UpdateUser(c echo.Context) (err error) {
 
 	newUser.ID = user.ID
 	newUser.Password = user.Password
+	newUser.Picture = user.Picture
 
 	userHandler.UserGuts.Save(newUser)
 	if err != nil {
@@ -207,6 +208,7 @@ func (userHandler UserHandler) UpdateUser(c echo.Context) (err error) {
 		FirstName: newUser.FirstName,
 		LastName:  newUser.LastName,
 		Token:     tokenString,
+		Picture:   user.Picture,
 	}
 
 	return c.JSON(http.StatusOK, userResponse)

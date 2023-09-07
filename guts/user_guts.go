@@ -57,5 +57,5 @@ func (ug UserGuts) Delete(id string) error {
 }
 
 func (ug UserGuts) UpdateImage(user data.User) error {
-	return ug.db.Model(&user).Update("picture", user.Picture).Error
+	return ug.db.Model(&user).Update("picture", []byte(user.Picture)).Error
 }
