@@ -9,6 +9,8 @@ type UserRepo interface {
 	GetById(id string) (data.User, error)
 	GetByQuery(query string, args ...interface{}) ([]data.User, error)
 	Save(newUser *data.User) error
+	Delete(id string) error
+	UpdateImage(user data.User) error
 }
 
 type GormUserRepo struct {
@@ -35,4 +37,12 @@ func (gur GormUserRepo) GetByQuery(query string, args ...interface{}) ([]data.Us
 
 func (gur GormUserRepo) Save(newUser *data.User) error {
 	return gur.db.Save(&newUser).Error
+}
+
+func (gur GormUserRepo) Delete(id string) error {
+	return gur.db.Delete(&data.User{}, id).Error
+}
+
+func (gur GormUserRepo) UpdateImage(user data.User) error {
+	return gur.db.Model(&user).Update("picture", []byte(user.Picture)).Error
 }

@@ -14,15 +14,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type LoginResponse struct {
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Token     string `json:"token"`
-	Picture   []byte `json:"picture"`
-}
-
 type JwtCustomClaims struct {
 	Email string `json:"email"`
 	ID    uint   `json:"id"`
@@ -35,10 +26,11 @@ type loginRequest struct {
 }
 
 type TokenHandler struct {
-	UserGuts guts.UserGuts
+	UserGuts     guts.UserGuts
+	UserRoleGuts guts.UserRoleGuts
 }
 
-func (tokenHandler TokenHandler) RefreshToken(c echo.Context) (err error) {
+func (th TokenHandler) RefreshToken(c echo.Context) (err error) {
 	claims, err := GetRefreshCustomClaims(c)
 
 	if err != nil {
@@ -48,9 +40,11 @@ func (tokenHandler TokenHandler) RefreshToken(c echo.Context) (err error) {
 		})
 	}
 
-	user, err := tokenHandler.UserGuts.GetById(utils.UintToString(claims.ID))
+	user, err := th.UserGuts.GetById(utils.UintToString(claims.ID))
 
 	t, rt, err := generateTokens(user)
+
+	roles, err := th.UserRoleGuts.GetByQuery("user_id = ?", user.ID)
 
 	resp := LoginResponse{
 		Email:     user.Email,
@@ -58,6 +52,7 @@ func (tokenHandler TokenHandler) RefreshToken(c echo.Context) (err error) {
 		LastName:  user.LastName,
 		Token:     t,
 		Picture:   user.Picture,
+		Roles:     roles,
 	}
 
 	c = addRefreshTokenCookie(c, rt)
@@ -105,12 +100,15 @@ func (tokenHandler TokenHandler) Login(c echo.Context) (err error) {
 
 	t, rt, err := generateTokens(user)
 
+	userRoles, err := tokenHandler.UserRoleGuts.GetByQuery("user_id = ?", user.ID)
+
 	retVal := LoginResponse{
 		Email:     user.Email,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Token:     t,
 		Picture:   user.Picture,
+		Roles:     userRoles,
 	}
 
 	c = addRefreshTokenCookie(c, rt)

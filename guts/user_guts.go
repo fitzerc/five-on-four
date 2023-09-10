@@ -35,27 +35,23 @@ func (ug UserGuts) IsAdmin(id string) (bool, error) {
 }
 
 func (ug UserGuts) GetById(id string) (data.User, error) {
-	var user data.User
-	err := ug.db.Where("id = ?", id).First(&user).Error
-
-	return user, err
+	return ug.userRepo.GetById(id)
 }
 
 func (ug UserGuts) GetByQuery(query string, args ...interface{}) ([]data.User, error) {
-	var users []data.User
-	err := ug.db.Where(query, args...).Find(&users).Error
-	return users, err
+	return ug.userRepo.GetByQuery(query, args)
 }
 
 func (ug UserGuts) Save(newUser *data.User) error {
-	return ug.db.Save(&newUser).Error
+	return ug.userRepo.Save(newUser)
 }
 
 func (ug UserGuts) Delete(id string) error {
 	//TODO: delete user's roles too
-	return ug.db.Delete(&data.User{}, id).Error
+	return ug.userRepo.Delete(id)
+
 }
 
 func (ug UserGuts) UpdateImage(user data.User) error {
-	return ug.db.Model(&user).Update("picture", []byte(user.Picture)).Error
+	return ug.userRepo.UpdateImage(user)
 }

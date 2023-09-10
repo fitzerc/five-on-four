@@ -45,7 +45,10 @@ func main() {
 	playerRoleGuts := guts.NewPlayerRoleGuts(db)
 
 	userHandler := &handlers.UserHandler{UserGuts: *userGuts}
-	tokenHandler := &handlers.TokenHandler{UserGuts: *userGuts}
+	tokenHandler := &handlers.TokenHandler{
+		UserGuts:     *userGuts,
+		UserRoleGuts: *userRoleGuts,
+	}
 	userRoleHandler := &handlers.UserRoleHandler{
 		UserRoleGuts: *userRoleGuts,
 		UserHandler:  *userHandler,
